@@ -49,10 +49,10 @@ namespace ZXing.Mobile
 
 		public override void ScanContinuously (MobileBarcodeScanningOptions options, Action<Result> scanHandler)
 		{
-			ScanContinuously (null, options, scanHandler);
+			ScanContinuously (null, options, scanHandler, null);
 		}
 
-		public void ScanContinuously (Context context, MobileBarcodeScanningOptions options, Action<Result> scanHandler)
+		public void ScanContinuously (Context context, MobileBarcodeScanningOptions options, Action<Result> scanHandler, Action canceledHandler)
 		{
 			var ctx = GetContext (context);
 			var scanIntent = new Intent(ctx, typeof(ZxingActivity));
@@ -66,14 +66,17 @@ namespace ZXing.Mobile
 			ZxingActivity.TopText = TopText;
 			ZxingActivity.BottomText = BottomText;
 
-			ZxingActivity.ScanCompletedHandler = (Result result) => 
-			{
-				if (scanHandler != null)
-					scanHandler (result);
-			};
+            ZxingActivity.ScanCompletedHandler = result =>
+            {
+                scanHandler?.Invoke(result);
+            };
+            ZxingActivity.CanceledHandler = () =>
+            {
+                canceledHandler?.Invoke();
+            };
 
-			ctx.StartActivity(scanIntent);
-		}
+            ctx.StartActivity(scanIntent);
+        }
 
 		public override Task<Result> Scan (MobileBarcodeScanningOptions options)
 		{
